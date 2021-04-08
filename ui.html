@@ -1,0 +1,30 @@
+222
+
+<script>
+  // debugger
+
+  let req = new XMLHttpRequest();
+  req.open("GET", `https://logo.clearbit.com/google.com`, true);
+  req.responseType = "arraybuffer";
+  req.onreadystatechange = () => {
+    if (req.readyState === 4) {
+      //if complete
+      if (req.status === 200) {
+        //check if "OK" (200)
+        let arrayBuffer = req.response;
+        if (arrayBuffer) {
+          let imageArray = new Uint8Array(arrayBuffer);
+          parent.postMessage(
+            { pluginMessage: { type: "create-logo", imageArray } },
+            "*"
+          );
+        }
+      } else {
+        parent.postMessage({ pluginMessage: { type: "error" } }, "*");
+      }
+    }
+  };
+  req.send(null);
+
+  console.log(req)
+</script>
