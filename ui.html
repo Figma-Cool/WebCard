@@ -1,9 +1,10 @@
 222
 
 <script>
-  function fetchLogo(link) {
+  function fetchLogo(data) {
+    let returnData = data;
     let req = new XMLHttpRequest();
-    req.open("GET", `https://logo.clearbit.com/${link}`, true);
+    req.open("GET", `https://logo.clearbit.com/${data.link}`, true);
     req.responseType = "arraybuffer";
     req.onreadystatechange = () => {
       if (req.readyState === 4) {
@@ -13,8 +14,10 @@
           let arrayBuffer = req.response;
           if (arrayBuffer) {
             let imageArray = new Uint8Array(arrayBuffer);
+            returnData.icoImg = imageArray;
+            console.log(returnData)
             parent.postMessage(
-              { pluginMessage: { type: "create-logo", imageArray } },
+              { pluginMessage: { type: "returnData", returnData } },
               "*"
             );
           }
@@ -31,7 +34,7 @@
     console.log(pmsg.selection);
 
     pmsg.selection.forEach((el) => {
-      fetchLogo(el.characters);
+      fetchLogo(el);
     });
   };
 </script>

@@ -17,7 +17,8 @@ function selection() {
   for (let t of figma.currentPage.selection) {
     selection.push({
       id: t.id,
-      characters: linkStringHandle(t.characters),
+      characters: t.characters,
+      link: linkStringHandle(t.characters),
       x: t.x,
       y: t.y,
     });
@@ -30,17 +31,30 @@ function selection() {
 
 selection();
 
+function createIco(fills, xx, yy) {
+  const icoImg = figma.createFrame();
+  //   figma.currentPage.appenChild(icoImg);
+  icoImg.x = xx;
+  icoImg.y = yy;
+  icoImg.name = "ico";
+  icoImg.fills = fills;
+  icoImg.resize(64, 64);
+  console.log(icoImg);
+  icoImg.cornerRadius = 12;
+}
+
 function clone(val) {
   return JSON.parse(JSON.stringify(val));
 }
 
 figma.ui.onmessage = (msg) => {
   switch (msg.type) {
-    case "create-logo":
+    case "returnData":
       const nodes = figma.currentPage.selection;
       if (nodes.length > 0) {
         nodes.forEach((node) => {
-          let image = figma.createImage(msg.imageArray);
+          console.log(msg);
+          let image = figma.createImage(msg.returnData.icoImg);
           if (node.type !== "SLICE" && node.type !== "GROUP") {
             let fills = clone(node.fills);
             fills.push({
@@ -48,7 +62,8 @@ figma.ui.onmessage = (msg) => {
               scaleMode: "FILL",
               imageHash: image.hash,
             });
-            node.fills = fills;
+            fills.shift();
+            createIco(fills, msg.returnData.x, msg.returnData.y);
           }
         });
       } else {
