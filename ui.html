@@ -1,10 +1,9 @@
 222
 
 <script>
-  function fetchLogo(data) {
-    let returnData = data;
+  function fetchIco(ico, returnData) {
     let req = new XMLHttpRequest();
-    req.open("GET", `https://logo.clearbit.com/${data.link}`, true);
+    req.open("GET", `https://logo.clearbit.com/${ico}`, true);
     req.responseType = "arraybuffer";
     req.onreadystatechange = () => {
       if (req.readyState === 4) {
@@ -15,7 +14,34 @@
           if (arrayBuffer) {
             let imageArray = new Uint8Array(arrayBuffer);
             returnData.icoImg = imageArray;
-            console.log(returnData)
+          }
+        } else {
+          parent.postMessage({ pluginMessage: { type: "error" } }, "*");
+        }
+      }
+    };
+    req.send(null);
+  }
+
+  function fetchData(data) {
+    let returnData = data;
+    fetchIco(data.link, returnData);
+    let req = new XMLHttpRequest();
+    req.open(
+      "GET",
+      `https://iframe.ly/api/iframely?url=${data.characters}&api_key=5cc4e3759ecc9a2f152ed9`,
+      true
+    );
+    req.responseType = "json";
+    req.onreadystatechange = () => {
+      if (req.readyState === 4) {
+        //if complete
+        if (req.status === 200) {
+          console.log(req.response);
+          //check if "OK" (200)
+          let arrayBuffer = req.response;
+          if (arrayBuffer) {
+            returnData.iframe = arrayBuffer;
             parent.postMessage(
               { pluginMessage: { type: "returnData", returnData } },
               "*"
@@ -31,10 +57,10 @@
 
   window.onmessage = async (event) => {
     pmsg = event.data.pluginMessage;
-    console.log(pmsg.selection);
+    // console.log(pmsg.selection);
 
     pmsg.selection.forEach((el) => {
-      fetchLogo(el);
+      fetchData(el);
     });
   };
 </script>
