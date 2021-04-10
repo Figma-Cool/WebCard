@@ -4,6 +4,10 @@ figma.ui.resize(400, 520);
 const link = "https://logo.clearbit.com/baidu.com";
 const selected = figma.currentPage.selection[0];
 
+function clone(val) {
+  return JSON.parse(JSON.stringify(val));
+}
+
 // 分割域名
 function linkStringHandle(s) {
   let string = s;
@@ -31,6 +35,7 @@ function selection() {
 
 selection();
 
+//创建 ico img
 function createIco(fills, xx, yy) {
   const icoImg = figma.createFrame();
   //   figma.currentPage.appenChild(icoImg);
@@ -43,8 +48,33 @@ function createIco(fills, xx, yy) {
   icoImg.cornerRadius = 12;
 }
 
-function clone(val) {
-  return JSON.parse(JSON.stringify(val));
+function createFrame(item, x, y) {
+  const frame = figma.createFrame();
+  frame.name = item;
+  frame.fills = [];
+  frame.resize(400, 180);
+  //   item.parent.appendChild(frame);
+  frame.x = x;
+  frame.y = y;
+  //   frame.appendChild(item);
+  frame.layoutMode = "VERTICAL";
+  frame.layoutAlign = "STRETCH";
+  frame.paddingTop = 20;
+  frame.paddingBottom = 20;
+  frame.paddingLeft = 20;
+  frame.paddingRight = 20;
+}
+
+//创建 title
+async function createText(text) {
+  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" });
+  const textNode = figma.createText();
+  console.log(textNode);
+  textNode.fontName = { family: "Noto Sans SC", style: "Regular" };
+  textNode.characters = text;
+  textNode.name = "title";
+  textNode.fills = [0, 0, 0];
+  return textNode;
 }
 
 figma.ui.onmessage = (msg) => {
@@ -64,6 +94,12 @@ figma.ui.onmessage = (msg) => {
             });
             fills.shift();
             createIco(fills, msg.returnData.x, msg.returnData.y);
+            createText(msg.returnData.iframe.meta.title);
+            createFrame(
+              msg.returnData.iframe.meta.title,
+              msg.returnData.x,
+              msg.returnData.y
+            );
           }
         });
       } else {
