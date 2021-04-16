@@ -43,9 +43,10 @@ function createIco(fills, xx, yy) {
   icoImg.y = yy;
   icoImg.name = "ico";
   icoImg.fills = fills;
-  icoImg.resize(64, 64);
+  icoImg.resize(24, 24);
   console.log(icoImg);
-  icoImg.cornerRadius = 12;
+  icoImg.cornerRadius = 6;
+  return icoImg
 }
 
 function createFrame(item, x, y) {
@@ -59,22 +60,54 @@ function createFrame(item, x, y) {
   //   frame.appendChild(item);
   frame.layoutMode = "VERTICAL";
   frame.layoutAlign = "STRETCH";
+  frame.itemSpacing = 20;
   frame.paddingTop = 20;
   frame.paddingBottom = 20;
   frame.paddingLeft = 20;
   frame.paddingRight = 20;
+  return frame
 }
 
 //创建 title
-async function createText(text) {
-  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" });
+async function createTitle(meta, x, y) {
+  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Bold" });
   const textNode = figma.createText();
-  console.log(textNode);
-  textNode.fontName = { family: "Noto Sans SC", style: "Regular" };
-  textNode.characters = text;
+  console.log(meta);
+  textNode.x = x;
+  textNode.y = y;
+  textNode.fontName = { family: "Noto Sans SC", style: "Bold" };
+  textNode.fontSize = 24;
+  textNode.characters = `${meta.title} | ${meta.site}`;
   textNode.name = "title";
   textNode.fills = [0, 0, 0];
   return textNode;
+}
+
+//创建 des
+async function createDes(meta, x, y) {
+  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" });
+  const textNode = figma.createText();
+  console.log(meta);
+  textNode.x = x;
+  textNode.y = y;
+  textNode.fontName = { family: "Noto Sans SC", style: "Regular" };
+  textNode.fontSize = 14;
+  textNode.opacity = 0.6;
+  textNode.characters = meta.description;
+  textNode.name = "description";
+  textNode.fills = [0, 0, 0];
+  return textNode;
+}
+
+function GenerateCard(icoFills, returnData) {
+  createIco(icoFills, returnData.x, returnData.y);
+  createTitle(returnData.iframe.meta, returnData.x, returnData.y);
+  createDes(returnData.iframe.meta, returnData.x, returnData.y);
+  createFrame(
+    `${returnData.iframe.meta.title} | ${returnData.iframe.meta.site}`,
+    returnData.x,
+    returnData.y
+  );
 }
 
 figma.ui.onmessage = (msg) => {
@@ -84,22 +117,16 @@ figma.ui.onmessage = (msg) => {
       if (nodes.length > 0) {
         nodes.forEach((node) => {
           console.log(msg);
-          let image = figma.createImage(msg.returnData.icoImg);
+          let imageIco = figma.createImage(msg.returnData.icoImg);
           if (node.type !== "SLICE" && node.type !== "GROUP") {
-            let fills = clone(node.fills);
-            fills.push({
+            let icoFills = clone(node.fills);
+            icoFills.push({
               type: "IMAGE",
               scaleMode: "FILL",
-              imageHash: image.hash,
+              imageHash: imageIco.hash,
             });
-            fills.shift();
-            createIco(fills, msg.returnData.x, msg.returnData.y);
-            createText(msg.returnData.iframe.meta.title);
-            createFrame(
-              msg.returnData.iframe.meta.title,
-              msg.returnData.x,
-              msg.returnData.y
-            );
+            icoFills.shift();
+            GenerateCard(icoFills, msg.returnData);
           }
         });
       } else {
