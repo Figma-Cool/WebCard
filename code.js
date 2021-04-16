@@ -1,5 +1,5 @@
 figma.showUI(__html__);
-figma.ui.resize(400, 520);
+figma.ui.resize(0, 0);
 
 const link = "https://logo.clearbit.com/baidu.com";
 const selected = figma.currentPage.selection[0];
@@ -46,68 +46,85 @@ function createIco(fills, xx, yy) {
   icoImg.resize(24, 24);
   console.log(icoImg);
   icoImg.cornerRadius = 6;
-  return icoImg
+  return icoImg;
 }
 
-function createFrame(item, x, y) {
+async function GenerateCard(icoFills, returnData) {
+  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" });
+  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Bold" });
+  const ico = createIco(icoFills, returnData.x, returnData.y);
+
+  //createTitle
+  const titleNode = figma.createText();
+  titleNode.x = returnData.x;
+  titleNode.y = returnData.y;
+  titleNode.fontName = { family: "Noto Sans SC", style: "Bold" };
+  titleNode.fontSize = 24;
+  titleNode.characters = `${returnData.iframe.meta.title}`;
+  titleNode.name = "title";
+  titleNode.layoutAlign = "STRETCH";
+
+  //createDes
+  const desNode = figma.createText();
+  desNode.x = returnData.x;
+  desNode.y = returnData.y;
+  desNode.fontName = { family: "Noto Sans SC", style: "Regular" };
+  desNode.fontSize = 14;
+  desNode.opacity = 0.6;
+  desNode.characters = returnData.iframe.meta.description.slice(0, 100) + "...";
+  desNode.name = "description";
+  desNode.layoutAlign = "STRETCH";
+
+  //createInnerFrame
+  const innerFrame = figma.createFrame();
+  innerFrame.name = "link";
+  let innerFrameFills = clone(innerFrame.fills);
+  innerFrameFills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+  innerFrame.fills = innerFrameFills;
+  innerFrame.resize(400, 24);
+  innerFrame.layoutMode = "HORIZONTAL";
+  //   innerFrame.layoutAlign = "STRETCH";
+  innerFrame.itemSpacing = 8;
+  innerFrame.appendChild(ico);
+  let selectedText = figma.currentPage.selection[0];
+  selectedText.fontName = { family: "Noto Sans SC", style: "Bold" };
+  selectedText.fontSize = 16;
+  selectedText.characters = linkStringHandle(selectedText.characters);
+  innerFrame.appendChild(selectedText);
+
+  //createFrame
   const frame = figma.createFrame();
-  frame.name = item;
-  frame.fills = [];
+  frame.name = `${returnData.iframe.meta.title}`;
+  let fills = clone(frame.fills);
+  fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+  frame.fills = fills;
+  frame.cornerRadius = 6;
   frame.resize(400, 180);
-  //   item.parent.appendChild(frame);
-  frame.x = x;
-  frame.y = y;
-  //   frame.appendChild(item);
+  frame.x = returnData.x;
+  frame.y = returnData.y;
   frame.layoutMode = "VERTICAL";
   frame.layoutAlign = "STRETCH";
-  frame.itemSpacing = 20;
+  frame.itemSpacing = 16;
   frame.paddingTop = 20;
   frame.paddingBottom = 20;
   frame.paddingLeft = 20;
   frame.paddingRight = 20;
-  return frame
-}
+  let shadowEffect = {
+    type: "DROP_SHADOW",
+    color: { r: 0, g: 0, b: 0, a: 0.1 },
+    offset: { x: 0, y: 2 },
+    radius: 8,
+    spread: -2,
+    visible: true,
+    blendMode: "HARD_LIGHT",
+  };
+  frame.effects = [shadowEffect];
 
-//创建 title
-async function createTitle(meta, x, y) {
-  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Bold" });
-  const textNode = figma.createText();
-  console.log(meta);
-  textNode.x = x;
-  textNode.y = y;
-  textNode.fontName = { family: "Noto Sans SC", style: "Bold" };
-  textNode.fontSize = 24;
-  textNode.characters = `${meta.title} | ${meta.site}`;
-  textNode.name = "title";
-  textNode.fills = [0, 0, 0];
-  return textNode;
-}
-
-//创建 des
-async function createDes(meta, x, y) {
-  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" });
-  const textNode = figma.createText();
-  console.log(meta);
-  textNode.x = x;
-  textNode.y = y;
-  textNode.fontName = { family: "Noto Sans SC", style: "Regular" };
-  textNode.fontSize = 14;
-  textNode.opacity = 0.6;
-  textNode.characters = meta.description;
-  textNode.name = "description";
-  textNode.fills = [0, 0, 0];
-  return textNode;
-}
-
-function GenerateCard(icoFills, returnData) {
-  createIco(icoFills, returnData.x, returnData.y);
-  createTitle(returnData.iframe.meta, returnData.x, returnData.y);
-  createDes(returnData.iframe.meta, returnData.x, returnData.y);
-  createFrame(
-    `${returnData.iframe.meta.title} | ${returnData.iframe.meta.site}`,
-    returnData.x,
-    returnData.y
-  );
+  //append
+  frame.appendChild(titleNode);
+  frame.appendChild(desNode);
+  frame.appendChild(innerFrame);
+  figma.closePlugin();
 }
 
 figma.ui.onmessage = (msg) => {
@@ -130,13 +147,13 @@ figma.ui.onmessage = (msg) => {
           }
         });
       } else {
-        figma.notify("Please select a layer");
+        figma.notify("Please select a text layer");
+        figma.closePlugin();
       }
       break;
-
     case "error":
-      // console.log(msg.e);
-      // figma.notify(msg.e);
+      figma.notify("Error, Please try again");
+      figma.closePlugin();
       break;
     case "cancel":
       figma.closePlugin();
