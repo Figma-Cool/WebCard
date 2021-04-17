@@ -1,6 +1,6 @@
 {
-  "name": "link card",
-  "id": "961962955594303940",
+  "name": "WebCard",
+  "id": "964923142929990075",
   "ui": "ui.html",
   "api": "1.0.0",
   "main": "code.js"
