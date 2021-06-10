@@ -1,45 +1,16 @@
-<svg
-  version="1.1"
-  id="Layer_1"
-  xmlns="http://www.w3.org/2000/svg"
-  xmlns:xlink="http://www.w3.org/1999/xlink"
-  x="0px"
-  y="0px"
-  width="24px"
-  height="30px"
-  viewBox="0 0 24 30"
-  style="enable-background: new 0 0 50 50"
-  xml:space="preserve"
->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+  y="0px" width="24px" height="30px" viewBox="0 0 24 30" style="enable-background: new 0 0 50 50" xml:space="preserve">
   <rect x="0" y="0" width="4" height="20" fill="#333">
-    <animate
-      attributeName="opacity"
-      attributeType="XML"
-      values="1; .2; 1"
-      begin="0s"
-      dur="0.6s"
-      repeatCount="indefinite"
-    ></animate>
+    <animate attributeName="opacity" attributeType="XML" values="1; .2; 1" begin="0s" dur="0.6s"
+      repeatCount="indefinite"></animate>
   </rect>
   <rect x="7" y="0" width="4" height="20" fill="#333">
-    <animate
-      attributeName="opacity"
-      attributeType="XML"
-      values="1; .2; 1"
-      begin="0.2s"
-      dur="0.6s"
-      repeatCount="indefinite"
-    ></animate>
+    <animate attributeName="opacity" attributeType="XML" values="1; .2; 1" begin="0.2s" dur="0.6s"
+      repeatCount="indefinite"></animate>
   </rect>
   <rect x="14" y="0" width="4" height="20" fill="#333">
-    <animate
-      attributeName="opacity"
-      attributeType="XML"
-      values="1; .2; 1"
-      begin="0.4s"
-      dur="0.6s"
-      repeatCount="indefinite"
-    ></animate>
+    <animate attributeName="opacity" attributeType="XML" values="1; .2; 1" begin="0.4s" dur="0.6s"
+      repeatCount="indefinite"></animate>
   </rect>
 </svg>
 
@@ -48,6 +19,7 @@
     padding: 0;
     margin: 0;
   }
+
   body {
     width: 100vw;
     height: 100vh;
@@ -58,64 +30,63 @@
 </style>
 
 <script>
-  function fetchIco(ico, returnData) {
-    let req = new XMLHttpRequest();
-    req.open("GET", `https://logo.clearbit.com/${ico}`, true);
-    req.responseType = "arraybuffer";
-    req.onreadystatechange = () => {
-      if (req.readyState === 4) {
-        //if complete
-        if (req.status === 200) {
-          //check if "OK" (200)
-          let arrayBuffer = req.response;
-          if (arrayBuffer) {
-            let imageArray = new Uint8Array(arrayBuffer);
-            returnData.icoImg = imageArray;
-          }
-        } else {
-          parent.postMessage({ pluginMessage: { type: "error" } }, "*");
-        }
+  // 抛出错误
+  function reportError(msg) {
+    parent.postMessage({
+      pluginMessage: {
+        type: "error",
+        msg
       }
-    };
-    req.send(null);
+    }, "*")
+  }
+
+  // 获取 Icon
+  function fetchIco(ico, returnData) {
+    fetch(`https://logo.clearbit.com/${ico}`)
+      .then(res => res.arrayBuffer())
+      .then(buffer => {
+        returnData.icoImg = new Uint8Array(buffer);
+      })
+      .catch(err => reportError("Unable to get website Icon"));
   }
 
   function fetchData(data) {
-    let returnData = data;
+    const returnData = data;
+
+    if (!data.link || !data.characters) {
+      reportError("Unable to analyze text")
+    }
+
+    // 获取 Icon
     fetchIco(data.link, returnData);
-    let req = new XMLHttpRequest();
-    req.open(
-      "GET",
-      `https://iframe.ly/api/iframely?url=${data.characters}&api_key=5cc4e3759ecc9a2f152ed9`,
-      true
-    );
-    req.responseType = "json";
-    req.onreadystatechange = () => {
-      if (req.readyState === 4) {
-        //if complete
-        if (req.status === 200) {
-          console.log(req.response);
-          //check if "OK" (200)
-          let arrayBuffer = req.response;
-          if (arrayBuffer) {
-            returnData.iframe = arrayBuffer;
-            parent.postMessage(
-              { pluginMessage: { type: "returnData", returnData } },
-              "*"
-            );
-          }
-        } else {
-          parent.postMessage({ pluginMessage: { type: "error" } }, "*");
-        }
-      }
-    };
-    req.send(null);
+
+    // 获取网页信息
+    fetch(`https://iframe.ly/api/iframely?url=${data.characters}&api_key=5cc4e3759ecc9a2f152ed9`)
+      .then(res => res.json())
+      .then(json => {
+        console.log(json);
+        returnData.iframe = json;
+        parent.postMessage({
+            pluginMessage: {
+              type: "returnData",
+              returnData
+            }
+          },
+          "*"
+        );
+      })
+      .catch(err => reportError("Unable to get website info"));
   }
 
   window.onmessage = async (event) => {
-    pmsg = event.data.pluginMessage;
+    const pmsg = event.data.pluginMessage;
 
-    fetchData(pmsg.selection[0]);
-    // });
+    const currentSelected = pmsg.selection[0];
+
+    if (!currentSelected) {
+      reportError("Nothing selected");
+    } else {
+      fetchData(currentSelected);
+    };
   };
 </script>
