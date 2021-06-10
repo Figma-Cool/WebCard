@@ -9,24 +9,20 @@ function clone(val) {
 }
 
 // 分割域名
-function linkStringHandle(s) {
-  let string = s;
-  return string.replace("https://", "").replace("http://", "").split("/")[0];
+function linkStringHandle(s = '') {
+  const urlMatch = s.match(/(http[s]?:\/\/)?([^\/^\?]+)/);
+  return urlMatch ? urlMatch[2] : '';
 }
 
 //选择所有，post new selection
 function selection() {
-  let selection = [];
-
-  for (let t of figma.currentPage.selection) {
-    selection.push({
-      id: t.id,
-      characters: t.characters,
-      link: linkStringHandle(t.characters),
-      x: t.x,
-      y: t.y,
-    });
-  }
+  let selection = figma.currentPage.selection.map(t => ({
+    id: t.id,
+    characters: t.characters,
+    link: linkStringHandle(t.characters),
+    x: t.x,
+    y: t.y,
+  }));
 
   figma.ui.postMessage({
     selection: selection,
@@ -152,7 +148,7 @@ figma.ui.onmessage = (msg) => {
       }
       break;
     case "error":
-      figma.notify("Error, Please try again");
+      figma.notify(`${msg.msg}, Please try again`);
       figma.closePlugin();
       break;
     case "cancel":
