@@ -9,14 +9,14 @@ function clone(val) {
 }
 
 // 分割域名
-function linkStringHandle(s = '') {
+function linkStringHandle(s = "") {
   const urlMatch = s.match(/(http[s]?:\/\/)?([^\/^\?]+)/);
-  return urlMatch ? urlMatch[2] : '';
+  return urlMatch ? urlMatch[2] : "";
 }
 
 //选择所有，post new selection
 function selection() {
-  let selection = figma.currentPage.selection.map(t => ({
+  let selection = figma.currentPage.selection.map((t) => ({
     id: t.id,
     characters: t.characters,
     link: linkStringHandle(t.characters),
@@ -40,21 +40,21 @@ function createIco(fills, xx, yy) {
   icoImg.name = "ico";
   icoImg.fills = fills;
   icoImg.resize(24, 24);
-  console.log(icoImg);
+  console.log(icoImg, "imgico");
   icoImg.cornerRadius = 6;
   return icoImg;
 }
 
 async function GenerateCard(icoFills, returnData) {
-  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" });
-  await figma.loadFontAsync({ family: "Noto Sans SC", style: "Bold" });
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  await figma.loadFontAsync({ family: "Inter", style: "Bold" });
   const ico = createIco(icoFills, returnData.x, returnData.y);
 
   //createTitle
   const titleNode = figma.createText();
   titleNode.x = returnData.x;
   titleNode.y = returnData.y;
-  titleNode.fontName = { family: "Noto Sans SC", style: "Bold" };
+  titleNode.fontName = { family: "Inter", style: "Bold" };
   titleNode.fontSize = 24;
   titleNode.characters = `${returnData.iframe.meta.title}`;
   titleNode.name = "title";
@@ -64,10 +64,13 @@ async function GenerateCard(icoFills, returnData) {
   const desNode = figma.createText();
   desNode.x = returnData.x;
   desNode.y = returnData.y;
-  desNode.fontName = { family: "Noto Sans SC", style: "Regular" };
+  desNode.fontName = { family: "Inter", style: "Regular" };
   desNode.fontSize = 14;
   desNode.opacity = 0.6;
-  desNode.characters = returnData.iframe.meta.description.slice(0, 100) + "...";
+  if (returnData.iframe.meta.description) {
+    desNode.characters =
+      returnData.iframe.meta.description.slice(0, 100) + "...";
+  }
   desNode.name = "description";
   desNode.layoutAlign = "STRETCH";
 
@@ -79,12 +82,22 @@ async function GenerateCard(icoFills, returnData) {
   innerFrame.fills = innerFrameFills;
   innerFrame.resize(400, 24);
   innerFrame.layoutMode = "HORIZONTAL";
-  //   innerFrame.layoutAlign = "STRETCH";
+  innerFrame.layoutAlign = "INHERIT";
+  innerFrame.counterAxisAlignItems = "CENTER";
   innerFrame.itemSpacing = 8;
   innerFrame.appendChild(ico);
-  let selectedText = figma.currentPage.selection[0];
-  selectedText.fontName = { family: "Noto Sans SC", style: "Bold" };
+
+  let selectedText = selected;
+  selectedText.fontName = { family: "Inter", style: "Regular" };
   selectedText.fontSize = 16;
+  selectedText.lineHeight = {
+    unit: "PIXELS",
+    value: 16,
+  };
+  selectedText.hyperlink = {
+    type: "URL",
+    value: selectedText.characters,
+  };
   selectedText.characters = linkStringHandle(selectedText.characters);
   innerFrame.appendChild(selectedText);
 
@@ -120,6 +133,7 @@ async function GenerateCard(icoFills, returnData) {
   frame.appendChild(titleNode);
   frame.appendChild(desNode);
   frame.appendChild(innerFrame);
+
   figma.closePlugin();
 }
 
@@ -129,8 +143,11 @@ figma.ui.onmessage = (msg) => {
       const nodes = figma.currentPage.selection;
       if (nodes.length > 0) {
         nodes.forEach((node) => {
-          console.log(msg);
-          let imageIco = figma.createImage(msg.returnData.icoImg);
+          console.log(msg, "msg");
+          let imageIco;
+          if (msg.returnData.icoImg !== undefined) {
+            imageIco = figma.createImage(msg.returnData.icoImg);
+          }
           if (node.type !== "SLICE" && node.type !== "GROUP") {
             let icoFills = clone(node.fills);
             icoFills.push({
