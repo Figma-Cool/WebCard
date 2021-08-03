@@ -88,7 +88,7 @@ async function GenerateCard(icoFills, returnData) {
   innerFrame.appendChild(ico);
 
   let selectedText = selected;
-  selectedText.fontName = { family: "Inter", style: "Regular" };
+  selectedText.fontName = { family: "Inter", style: "Bold" };
   selectedText.fontSize = 16;
   selectedText.lineHeight = {
     unit: "PIXELS",
