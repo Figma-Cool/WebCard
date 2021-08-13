@@ -1,16 +1,45 @@
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
-  y="0px" width="24px" height="30px" viewBox="0 0 24 30" style="enable-background: new 0 0 50 50" xml:space="preserve">
+<svg
+  version="1.1"
+  id="Layer_1"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  x="0px"
+  y="0px"
+  width="24px"
+  height="30px"
+  viewBox="0 0 24 30"
+  style="enable-background: new 0 0 50 50"
+  xml:space="preserve"
+>
   <rect x="0" y="0" width="4" height="20" fill="#333">
-    <animate attributeName="opacity" attributeType="XML" values="1; .2; 1" begin="0s" dur="0.6s"
-      repeatCount="indefinite"></animate>
+    <animate
+      attributeName="opacity"
+      attributeType="XML"
+      values="1; .2; 1"
+      begin="0s"
+      dur="0.6s"
+      repeatCount="indefinite"
+    ></animate>
   </rect>
   <rect x="7" y="0" width="4" height="20" fill="#333">
-    <animate attributeName="opacity" attributeType="XML" values="1; .2; 1" begin="0.2s" dur="0.6s"
-      repeatCount="indefinite"></animate>
+    <animate
+      attributeName="opacity"
+      attributeType="XML"
+      values="1; .2; 1"
+      begin="0.2s"
+      dur="0.6s"
+      repeatCount="indefinite"
+    ></animate>
   </rect>
   <rect x="14" y="0" width="4" height="20" fill="#333">
-    <animate attributeName="opacity" attributeType="XML" values="1; .2; 1" begin="0.4s" dur="0.6s"
-      repeatCount="indefinite"></animate>
+    <animate
+      attributeName="opacity"
+      attributeType="XML"
+      values="1; .2; 1"
+      begin="0.4s"
+      dur="0.6s"
+      repeatCount="indefinite"
+    ></animate>
   </rect>
 </svg>
 
@@ -32,50 +61,58 @@
 <script>
   // 抛出错误
   function reportError(msg) {
-    parent.postMessage({
-      pluginMessage: {
-        type: "error",
-        msg
-      }
-    }, "*")
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "error",
+          msg,
+        },
+      },
+      "*"
+    );
   }
 
   // 获取 Icon
   function fetchIco(ico, returnData) {
     fetch(`https://logo.clearbit.com/${ico}`)
-      .then(res => res.arrayBuffer())
-      .then(buffer => {
+      .then((res) => res.arrayBuffer())
+      .then((buffer) => {
         returnData.icoImg = new Uint8Array(buffer);
       })
-      .catch(err => reportError("Unable to get website Icon"));
+      .catch((err) => {
+        // reportError("Unable to get website Icon");
+      });
   }
 
   function fetchData(data) {
     const returnData = data;
 
     if (!data.link || !data.characters) {
-      reportError("Unable to analyze text")
+      reportError("Unable to analyze text");
     }
 
     // 获取 Icon
     fetchIco(data.link, returnData);
 
     // 获取网页信息
-    fetch(`https://iframe.ly/api/iframely?url=${data.characters}&api_key=5cc4e3759ecc9a2f152ed9`)
-      .then(res => res.json())
-      .then(json => {
+    fetch(
+      `https://iframe.ly/api/iframely?url=${data.characters}&api_key=5cc4e3759ecc9a2f152ed9`
+    )
+      .then((res) => res.json())
+      .then((json) => {
         console.log(json);
         returnData.iframe = json;
-        parent.postMessage({
+        parent.postMessage(
+          {
             pluginMessage: {
               type: "returnData",
-              returnData
-            }
+              returnData,
+            },
           },
           "*"
         );
       })
-      .catch(err => reportError("Unable to get website info"));
+      .catch((err) => reportError("Unable to get website info"));
   }
 
   window.onmessage = async (event) => {
@@ -87,6 +124,6 @@
       reportError("Nothing selected");
     } else {
       fetchData(currentSelected);
-    };
+    }
   };
 </script>

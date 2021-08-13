@@ -48,7 +48,10 @@ function createIco(fills, xx, yy) {
 async function GenerateCard(icoFills, returnData) {
   await figma.loadFontAsync({ family: "Inter", style: "Regular" });
   await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-  const ico = createIco(icoFills, returnData.x, returnData.y);
+  let ico;
+  if (icoFills !== "") {
+    ico = createIco(icoFills, returnData.x, returnData.y);
+  }
 
   //createTitle
   const titleNode = figma.createText();
@@ -85,7 +88,10 @@ async function GenerateCard(icoFills, returnData) {
   innerFrame.layoutAlign = "INHERIT";
   innerFrame.counterAxisAlignItems = "CENTER";
   innerFrame.itemSpacing = 8;
-  innerFrame.appendChild(ico);
+  if (ico !== undefined) {
+    // console.log(ico);
+    innerFrame.appendChild(ico);
+  }
 
   let selectedText = selected;
   selectedText.fontName = { family: "Inter", style: "Bold" };
@@ -145,18 +151,20 @@ figma.ui.onmessage = (msg) => {
         nodes.forEach((node) => {
           console.log(msg, "msg");
           let imageIco;
-          if (msg.returnData.icoImg !== undefined) {
+          if (msg.returnData.icoImg) {
             imageIco = figma.createImage(msg.returnData.icoImg);
-          }
-          if (node.type !== "SLICE" && node.type !== "GROUP") {
-            let icoFills = clone(node.fills);
-            icoFills.push({
-              type: "IMAGE",
-              scaleMode: "FILL",
-              imageHash: imageIco.hash,
-            });
-            icoFills.shift();
-            GenerateCard(icoFills, msg.returnData);
+            if (node.type !== "SLICE" && node.type !== "GROUP") {
+              let icoFills = clone(node.fills);
+              icoFills.push({
+                type: "IMAGE",
+                scaleMode: "FILL",
+                imageHash: imageIco.hash,
+              });
+              icoFills.shift();
+              GenerateCard(icoFills, msg.returnData);
+            }
+          } else {
+            GenerateCard("", msg.returnData);
           }
         });
       } else {
